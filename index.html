@@ -231,14 +231,9 @@ body::before { content:''; position:fixed; inset:0; background: radial-gradient(
     <div class="welcome-emoji">📚</div>
     <h2>עושר לשוני</h2>
     <p>אוצר מילים לפסיכומטרי<br>מבוסס על הספר של אבירם פלדמן<br><strong style="color:var(--accent);">1,806 מילים · 10 יחידות</strong></p>
-    <div id="authForm" style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:320px;">
-      <input type="email" id="authEmail" placeholder="אימייל" autofocus style="padding:14px 24px;border-radius:14px;border:2px solid var(--border);background:var(--glass);backdrop-filter:blur(10px);color:var(--text);font-size:1.1em;text-align:center;width:100%;font-family:inherit;transition:border-color 0.3s;outline:none;direction:ltr;">
-      <input type="password" id="authPassword" placeholder="סיסמה" style="padding:14px 24px;border-radius:14px;border:2px solid var(--border);background:var(--glass);backdrop-filter:blur(10px);color:var(--text);font-size:1.1em;text-align:center;width:100%;font-family:inherit;transition:border-color 0.3s;outline:none;direction:ltr;">
-      <input type="password" id="authPasswordConfirm" placeholder="אימות סיסמה" style="padding:14px 24px;border-radius:14px;border:2px solid var(--border);background:var(--glass);backdrop-filter:blur(10px);color:var(--text);font-size:1.1em;text-align:center;width:100%;font-family:inherit;transition:border-color 0.3s;outline:none;direction:ltr;display:none;">
+      <input type="text" id="localUsername" placeholder="שם משתמש" autofocus style="padding:14px 24px;border-radius:14px;border:2px solid var(--border);background:var(--glass);backdrop-filter:blur(10px);color:var(--text);font-size:1.1em;text-align:center;width:100%;font-family:inherit;transition:border-color 0.3s;outline:none;" onkeydown="if(event.key==='Enter') handleLocalLogin()">
       <div id="authError" style="color:var(--error);font-size:0.9em;text-align:center;display:none;"></div>
-      <button class="btn btn-primary" id="authSubmitBtn" onclick="handleAuth()" style="padding:14px 48px;font-size:1.15em;font-weight:700;border-radius:14px;width:100%;">התחברות</button>
-      <button class="btn btn-secondary btn-small" id="authToggleBtn" onclick="toggleAuthMode()" style="font-size:0.9em;">אין לך חשבון? הרשמה</button>
-    </div>
+      <button class="btn btn-primary" id="authSubmitBtn" onclick="handleLocalLogin()" style="padding:14px 48px;font-size:1.15em;font-weight:700;border-radius:14px;width:100%;">כניסה</button>
   </div>
 
   <!-- Language Selection Screen -->
@@ -6954,15 +6949,14 @@ function toggleSound() {
   document.getElementById('soundToggle').textContent = soundEnabled ? '🔊' : '🔇';
   if (soundEnabled && !audioContext) initAudio();
 }
-let authMode = 'login'; // 'login' or 'register'
-let firestoreSaveTimeout = null;
-
-function toggleAuthMode() {
-  authMode = authMode === 'login' ? 'register' : 'login';
-  document.getElementById('authPasswordConfirm').style.display = authMode === 'register' ? 'block' : 'none';
-  document.getElementById('authSubmitBtn').textContent = authMode === 'register' ? 'הרשמה' : 'התחברות';
-  document.getElementById('authToggleBtn').textContent = authMode === 'register' ? 'יש לך חשבון? התחברות' : 'אין לך חשבון? הרשמה';
-  document.getElementById('authError').style.display = 'none';
+// Local auth helpers
+function handleLocalLogin() {
+  let val = document.getElementById('localUsername').value.trim();
+  if (!val) { showAuthError('נא להזין שם משתמש'); return; }
+  username = val;
+  localStorage.setItem('lastUsername', username);
+  showApp();
+  document.getElementById('logoutBtn').style.display = 'inline-block';
 }
 
 function showAuthError(msg) {
@@ -6971,165 +6965,29 @@ function showAuthError(msg) {
   el.style.display = 'block';
 }
 
-function firebaseErrorHebrew(code) {
-  switch(code) {
-    case 'auth/wrong-password': case 'auth/invalid-credential': return 'סיסמה שגויה';
-    case 'auth/user-not-found': return 'משתמש לא נמצא';
-    case 'auth/email-already-in-use': return 'האימייל כבר בשימוש';
-    case 'auth/weak-password': return 'הסיסמה חלשה מדי (לפחות 6 תווים)';
-    case 'auth/invalid-email': return 'כתובת אימייל לא תקינה';
-    case 'auth/too-many-requests': return 'יותר מדי ניסיונות. נסה שוב מאוחר יותר';
-    case 'auth/network-request-failed': return 'שגיאת רשת. בדוק את החיבור לאינטרנט';
-    default: return 'שגיאה: ' + code;
-  }
-}
-
-async function handleAuth() {
-  let email = document.getElementById('authEmail').value.trim();
-  let password = document.getElementById('authPassword').value;
-  if (!email || !password) { showAuthError('נא למלא אימייל וסיסמה'); return; }
-  if (authMode === 'register') {
-    let confirm = document.getElementById('authPasswordConfirm').value;
-    if (password !== confirm) { showAuthError('הסיסמאות לא תואמות'); return; }
-  }
-  document.getElementById('authSubmitBtn').disabled = true;
-  document.getElementById('authSubmitBtn').textContent = '⏳ ...';
-  try {
-    if (authMode === 'register') {
-      await auth.createUserWithEmailAndPassword(email, password);
-    } else {
-      await auth.signInWithEmailAndPassword(email, password);
-    }
-    // onAuthStateChanged will handle the rest
-  } catch(e) {
-    console.error('Auth error:', e);
-    showAuthError(firebaseErrorHebrew(e.code) || e.message);
-    document.getElementById('authSubmitBtn').disabled = false;
-    document.getElementById('authSubmitBtn').textContent = authMode === 'register' ? 'הרשמה' : 'התחברות';
-  }
-}
-
 function logoutUser() {
-  auth.signOut();
-  currentUid = null;
   username = '';
+  localStorage.removeItem('lastUsername');
   document.getElementById('welcome').style.display = 'flex';
   document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('englishApp').style.display = 'none';
+  document.getElementById('languageSelect').style.display = 'none';
   document.getElementById('logoutBtn').style.display = 'none';
-  document.getElementById('authEmail').value = '';
-  document.getElementById('authPassword').value = '';
-  document.getElementById('authPasswordConfirm').value = '';
+  document.getElementById('localUsername').value = '';
   document.getElementById('authError').style.display = 'none';
-  document.getElementById('authSubmitBtn').disabled = false;
-  document.getElementById('authSubmitBtn').textContent = 'התחברות';
-  authMode = 'login';
-  toggleAuthMode(); toggleAuthMode(); // reset UI
 }
 
-// Firestore sync helpers
-async function loadFromFirestore() {
-  if (!currentUid) return;
-  try {
-    let doc = await db.collection('users').doc(currentUid).get();
-    if (doc.exists) {
-      let data = doc.data();
-      if (data.progress) localStorage.setItem(sKey('progress'), JSON.stringify(data.progress));
-      if (data.mistakes) localStorage.setItem(sKey('mistakes'), JSON.stringify(data.mistakes));
-      if (data.essays) localStorage.setItem(sKey('essays'), JSON.stringify(data.essays));
-      if (data.lastUnit) localStorage.setItem(username + '_lastUnit', data.lastUnit);
-      if (data.analogy_stats) localStorage.setItem(sKey('analogy_stats'), JSON.stringify(data.analogy_stats));
-      if (data.dailyStats) localStorage.setItem(sKey('dailyStats'), JSON.stringify(data.dailyStats));
-      if (data.soundEnabled !== undefined) {
-        soundEnabled = data.soundEnabled;
-        localStorage.setItem('soundEnabled', soundEnabled);
-        document.getElementById('soundToggle').textContent = soundEnabled ? '🔊' : '🔇';
-      }
-      if (data.eng_progress) localStorage.setItem(sKey('eng_progress'), JSON.stringify(data.eng_progress));
-      if (data.eng_srs) localStorage.setItem(sKey('eng_srs'), JSON.stringify(data.eng_srs));
-      if (data.eng_mistakes) localStorage.setItem(sKey('eng_mistakes'), JSON.stringify(data.eng_mistakes));
-    }
-  } catch(e) { console.error('Firestore load error:', e); }
-}
+function saveToFirestore() { /* local only - no cloud sync */ }
+async function loadFromFirestore() { /* local only - no cloud sync */ }
 
-function updateSpacedRepetitionCount() {
-  let count = getSpacedRepetitionWords().length;
-  el = document.getElementById('spacedRepetitionCount');
-  if (el) {
-    el.textContent = count > 0 ? `🔄 ${count}` : '';
-    el.style.display = count > 0 ? 'inline' : 'none';
-  }
-}
-
-function updateDailyStats(type, value) {
-  let dailyStats = getData('dailyStats', []);
-  let today = new Date().toISOString().split('T')[0];
-  let todayStats = dailyStats.find(d => d.date === today);
-  
-  if (!todayStats) {
-    todayStats = { date: today, wordsReviewed: 0, quizScore: 0, newWords: 0 };
-    dailyStats.push(todayStats);
-  }
-  
-  if (type === 'wordReviewed') {
-    todayStats.wordsReviewed = (todayStats.wordsReviewed || 0) + 1;
-  } else if (type === 'newWord') {
-    todayStats.newWords = (todayStats.newWords || 0) + 1;
-  } else if (type === 'quizScore') {
-    todayStats.quizScore = value; // Override with latest score
-  }
-  
-  // Keep only last 30 days
-  if (dailyStats.length > 30) {
-    dailyStats = dailyStats.slice(-30);
-  }
-  
-  setData('dailyStats', dailyStats);
-}
-
-function saveToFirestore() {
-  if (!currentUid) return;
-  // Debounce: wait 1.5s after last change
-  clearTimeout(firestoreSaveTimeout);
-  firestoreSaveTimeout = setTimeout(() => {
-    data = {
-      progress: getData('progress', {}),
-      mistakes: getData('mistakes', []),
-      essays: getData('essays', []),
-      lastUnit: localStorage.getItem(username + '_lastUnit') || '',
-      analogy_stats: getData('analogy_stats', {correct:0, total:0}),
-      dailyStats: getData('dailyStats', []),
-      soundEnabled: soundEnabled,
-      eng_progress: JSON.parse(localStorage.getItem(sKey('eng_progress')) || '{}'),
-      eng_srs: JSON.parse(localStorage.getItem(sKey('eng_srs')) || '{}'),
-      eng_mistakes: JSON.parse(localStorage.getItem(sKey('eng_mistakes')) || '[]'),
-      lastSync: Date.now(),
-      email: auth.currentUser ? auth.currentUser.email : ''
-    };
-    db.collection('users').doc(currentUid).set(data, { merge: true }).catch(e => console.error('Firestore save error:', e));
-  }, 1500);
-}
-
-auth.onAuthStateChanged(async (user) => {
-  if (user) {
-    currentUid = user.uid;
-    username = user.email.split('@')[0];
-    await loadFromFirestore();
+// Auto-login if username was saved
+document.addEventListener('DOMContentLoaded', () => {
+  let saved = localStorage.getItem('lastUsername');
+  if (saved) {
+    username = saved;
     showApp();
     document.getElementById('logoutBtn').style.display = 'inline-block';
-    // Show admin button for admin user
-    if (user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-      let ab = document.getElementById('adminBtn');
-      if (ab) { ab.classList.remove('admin-hide'); ab.classList.add('admin-show'); }
-    }
   }
-});
-
-// Allow Enter key to submit auth form
-document.addEventListener('DOMContentLoaded', () => {
-  ['authEmail','authPassword','authPasswordConfirm'].forEach(id => {
-    el = document.getElementById(id);
-    if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') handleAuth(); });
-  });
 });
 
 // Storage helpers
