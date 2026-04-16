@@ -7314,17 +7314,11 @@ function initEnglishApp() {
   filteredEngWords = [...ENGLISH_VOCAB];
   
   // Populate unit filter for English
-  let engUnits = [...new Set(ENGLISH_VOCAB.map(w => w.unit))].sort((a,b) => a-b);
-  sel = document.getElementById('engUnitFilter');
-  sel.innerHTML = '<option value="all">All Units (' + ENGLISH_VOCAB.length + ')</option>';
-  engUnits.forEach(u => {
-    count = ENGLISH_VOCAB.filter(w => w.unit === u).length;
-    sel.innerHTML += '<option value="' + u + '">Unit ' + u + ' (' + count + ')</option>';
-  });
+  refreshEngUnitFilter();
   
   // Restore last English unit
   let lastEngUnit = localStorage.getItem(username + '_lastEngUnit');
-  if (lastEngUnit) sel.value = lastEngUnit;
+  if (lastEngUnit) document.getElementById('engUnitFilter').value = lastEngUnit;
   
   applyEngFilter();
   setEngMode('flashcards');
@@ -7562,9 +7556,15 @@ function flipEngCard() {
   
   // Show rating buttons when flipped to back
   if (card.classList.contains('flipped')) {
-    document.getElementById('eng-fc-rating').style.display = 'flex';
+    let ratingEl = document.getElementById('eng-fc-rating');
+    let currentUnit = document.getElementById('engUnitFilter').value;
+    if (currentUnit === 'know') {
+      ratingEl.innerHTML = '<button class="btn btn-error btn-small" onclick="removeEngKnownAndRefresh()">&#8617; I don\'t know</button>';
+    } else {
+      ratingEl.innerHTML = '<button class="btn btn-error btn-small" onclick="rateEngCard(0)">&#10060; Don\'t know</button><button class="btn btn-success btn-small" onclick="rateEngCard(2)">&#9989; I know it</button>';
+    }
+    ratingEl.style.display = 'flex';
   }
-}
 
 function rateEngCard(q) {
   w = filteredEngWords[engFcIndex];
@@ -7574,6 +7574,7 @@ function rateEngCard(q) {
     playSound('incorrect');
   } else if (q === 2) {
     removeEngMistake(w.word);
+    addEngKnown(w.word);
     playSound('correct');
   }
   nextEngCard();
@@ -7649,6 +7650,7 @@ function rateEngUnknown(q) {
     playSound('incorrect');
   } else if (q === 2) {
     removeEngMistake(w.word);
+    addEngKnown(w.word);
     playSound('correct');
   }
   nextEngUnknown();
@@ -7716,6 +7718,49 @@ function removeEngMistake(word) {
   unknown = unknown.filter(w => w !== word);
   localStorage.setItem(sKey('eng_unknown'), JSON.stringify(unknown));
   saveToFirestore();
+}
+
+function addEngKnown(word) {
+  let known = JSON.parse(localStorage.getItem(sKey('eng_known')) || '[]');
+  if (!known.includes(word)) known.push(word);
+  localStorage.setItem(sKey('eng_known'), JSON.stringify(known));
+  saveToFirestore();
+  refreshEngUnitFilter();
+}
+
+function removeEngKnown(word) {
+  let known = JSON.parse(localStorage.getItem(sKey('eng_known')) || '[]');
+  known = known.filter(w => w !== word);
+  localStorage.setItem(sKey('eng_known'), JSON.stringify(known));
+  saveToFirestore();
+  refreshEngUnitFilter();
+}
+
+function refreshEngUnitFilter() {
+  let known = JSON.parse(localStorage.getItem(sKey('eng_known')) || '[]');
+  let engUnits = [...new Set(ENGLISH_VOCAB.map(w => w.unit))].sort((a,b) => a-b);
+  let sel = document.getElementById('engUnitFilter');
+  if (!sel) return;
+  let currentVal = sel.value;
+  let totalUnknown = ENGLISH_VOCAB.filter(w => !known.includes(w.word)).length;
+  sel.innerHTML = '<option value="all">All Units (' + totalUnknown + ')</option>';
+  engUnits.forEach(u => {
+    let count = ENGLISH_VOCAB.filter(w => w.unit === u && !known.includes(w.word)).length;
+    sel.innerHTML += '<option value="' + u + '">Unit ' + u + ' (' + count + ')</option>';
+  });
+  sel.innerHTML += '<option value="know">\u2b50 KNOW (' + known.length + ')</option>';
+  sel.value = currentVal;
+}
+
+function removeEngKnownAndRefresh() {
+  let w = filteredEngWords[engFcIndex];
+  if (!w) return;
+  let savedIndex = engFcIndex;
+  removeEngKnown(w.word);
+  filteredEngWords = filteredEngWords.filter(fw => fw.word !== w.word);
+  document.getElementById('engWordCount').textContent = filteredEngWords.length + ' words';
+  engFcIndex = Math.min(savedIndex, Math.max(0, filteredEngWords.length - 1));
+  showEngFlashcard();
 }
 
 function srSortEng(words) {
