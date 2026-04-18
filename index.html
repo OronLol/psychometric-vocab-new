@@ -698,7 +698,6 @@ body::before { content:''; position:fixed; inset:0; background: radial-gradient(
           <div class="flashcard-face">
             <span class="flashcard-unit" id="eng-fc-unit"></span>
             <div class="flashcard-word" id="eng-fc-word" style="direction:ltr;text-align:center;"></div>
-            <button class="btn btn-secondary btn-small" onclick="event.stopPropagation();speakWord(filteredEngWords[engFcIndex]&&filteredEngWords[engFcIndex].word)" style="margin-top:10px;font-size:1.2em;padding:6px 14px;">🔊</button>
             <div style="font-size:0.9em; opacity:0.5; margin-top:8px;">Click to flip</div>
           </div>
           <div class="flashcard-face flashcard-back">
@@ -714,6 +713,7 @@ body::before { content:''; position:fixed; inset:0; background: radial-gradient(
         <button class="btn btn-error btn-small" onclick="rateEngCard(0)">❌ Don't know</button>
         <button class="btn btn-success btn-small" onclick="rateEngCard(2)">✅ I know it</button>
       </div>
+      <div style="text-align:center;margin:8px 0;"><button class="btn btn-secondary" onclick="speakWord(filteredEngWords[engFcIndex]&&filteredEngWords[engFcIndex].word)" style="font-size:1.1em;padding:8px 20px;">🔊 Hear word</button></div>
       <div class="flashcard-nav">
         <button class="btn btn-secondary" onclick="prevEngCard()">← Previous</button>
         <button class="btn btn-primary" onclick="nextEngCard()">Next →</button>
@@ -733,7 +733,6 @@ body::before { content:''; position:fixed; inset:0; background: radial-gradient(
           <div class="flashcard-face">
             <span class="flashcard-unit" id="eng-uk-unit"></span>
             <div class="flashcard-word" id="eng-uk-word" style="direction:ltr;text-align:center;"></div>
-            <button class="btn btn-secondary btn-small" onclick="event.stopPropagation();speakWord(engUnknownWords[engUnknownIndex]&&engUnknownWords[engUnknownIndex].word)" style="margin-top:10px;font-size:1.2em;padding:6px 14px;">🔊</button>
             <div style="font-size:0.9em; opacity:0.5; margin-top:8px;">Click to flip</div>
           </div>
           <div class="flashcard-face flashcard-back">
@@ -749,6 +748,7 @@ body::before { content:''; position:fixed; inset:0; background: radial-gradient(
         <button class="btn btn-error btn-small" onclick="rateEngUnknown(0)">❌ Still don't know</button>
         <button class="btn btn-success btn-small" onclick="rateEngUnknown(2)">✅ Now I know it!</button>
       </div>
+      <div style="text-align:center;margin:8px 0;"><button class="btn btn-secondary" onclick="speakWord(engUnknownWords[engUnknownIndex]&&engUnknownWords[engUnknownIndex].word)" style="font-size:1.1em;padding:8px 20px;">🔊 Hear word</button></div>
       <div class="flashcard-nav">
         <button class="btn btn-secondary" onclick="prevEngUnknown()">← Previous</button>
         <button class="btn btn-primary" onclick="nextEngUnknown()">Next →</button>
