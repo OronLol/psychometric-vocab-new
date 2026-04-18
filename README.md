@@ -27,7 +27,7 @@
 
 פשוט פתחו את הקובץ `index.html` בדפדפן, או גלשו ל:
 
-**https://oronlol.github.io/psychometric-vocab/**
+**https://oronlol.github.io/psychometric-vocab-new/**
 
 ## טכנולוגיה
 
