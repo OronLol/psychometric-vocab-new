@@ -7,6 +7,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://code.responsivevoice.org/responsivevoice.js?key=FREE"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -713,7 +714,10 @@ body::before { content:''; position:fixed; inset:0; background: radial-gradient(
         <button class="btn btn-error btn-small" onclick="rateEngCard(0)">❌ Don't know</button>
         <button class="btn btn-success btn-small" onclick="rateEngCard(2)">✅ I know it</button>
       </div>
-      <div style="text-align:center;margin:8px 0;"><button class="btn btn-secondary" onclick="speakWord(filteredEngWords[engFcIndex]&&filteredEngWords[engFcIndex].word)" style="font-size:1.1em;padding:8px 20px;">🔊 Hear word</button></div>
+      <div style="text-align:center;margin:8px 0;display:flex;gap:8px;justify-content:center;">
+        <button class="btn btn-secondary" onclick="speakWord(filteredEngWords[engFcIndex]&&filteredEngWords[engFcIndex].word)" style="font-size:1.1em;padding:8px 20px;">🔊 Hear word</button>
+        <button class="btn btn-secondary" onclick="playRandomTone()" style="font-size:1.1em;padding:8px 16px;" title="Test sound">🎵</button>
+      </div>
       <div class="flashcard-nav">
         <button class="btn btn-secondary" onclick="prevEngCard()">← Previous</button>
         <button class="btn btn-primary" onclick="nextEngCard()">Next →</button>
@@ -748,7 +752,10 @@ body::before { content:''; position:fixed; inset:0; background: radial-gradient(
         <button class="btn btn-error btn-small" onclick="rateEngUnknown(0)">❌ Still don't know</button>
         <button class="btn btn-success btn-small" onclick="rateEngUnknown(2)">✅ Now I know it!</button>
       </div>
-      <div style="text-align:center;margin:8px 0;"><button class="btn btn-secondary" onclick="speakWord(engUnknownWords[engUnknownIndex]&&engUnknownWords[engUnknownIndex].word)" style="font-size:1.1em;padding:8px 20px;">🔊 Hear word</button></div>
+      <div style="text-align:center;margin:8px 0;display:flex;gap:8px;justify-content:center;">
+        <button class="btn btn-secondary" onclick="speakWord(engUnknownWords[engUnknownIndex]&&engUnknownWords[engUnknownIndex].word)" style="font-size:1.1em;padding:8px 20px;">🔊 Hear word</button>
+        <button class="btn btn-secondary" onclick="playRandomTone()" style="font-size:1.1em;padding:8px 16px;" title="Test sound">🎵</button>
+      </div>
       <div class="flashcard-nav">
         <button class="btn btn-secondary" onclick="prevEngUnknown()">← Previous</button>
         <button class="btn btn-primary" onclick="nextEngUnknown()">Next →</button>
@@ -7066,16 +7073,31 @@ function shuffle(arr) {
 function speakWord(word) {
   if (!word) return;
   word = word.trim();
-  let url = 'https://translate.google.com/translate_tts?ie=UTF-8&q=' + encodeURIComponent(word) + '&tl=en&client=tw-ob';
-  let audio = new Audio(url);
-  audio.play().catch(e => {
-    if (window.speechSynthesis) {
-      speechSynthesis.cancel();
-      let utter = new SpeechSynthesisUtterance(word);
-      utter.lang = 'en-US';
-      speechSynthesis.speak(utter);
-    }
-  });
+  if (window.responsiveVoice) {
+    responsiveVoice.speak(word, "US English Female", { rate: 0.9 });
+  } else if (window.speechSynthesis) {
+    speechSynthesis.cancel();
+    let utter = new SpeechSynthesisUtterance(word);
+    utter.lang = 'en-US';
+    speechSynthesis.speak(utter);
+  }
+}
+
+function playRandomTone() {
+  initAudio();
+  if (!audioContext) return;
+  let notes = [261.63, 329.63, 392.00, 440.00, 523.25];
+  let freq = notes[Math.floor(Math.random() * notes.length)];
+  let osc = audioContext.createOscillator();
+  let gain = audioContext.createGain();
+  osc.connect(gain);
+  gain.connect(audioContext.destination);
+  osc.frequency.value = freq;
+  osc.type = 'sine';
+  gain.gain.setValueAtTime(0.2, audioContext.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
+  osc.start(audioContext.currentTime);
+  osc.stop(audioContext.currentTime + 0.6);
 }
   for (let i = a.length - 1; i > 0; i--) {
     let j = Math.floor(Math.random() * (i + 1));
