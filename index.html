@@ -698,7 +698,7 @@ body::before { content:''; position:fixed; inset:0; background: radial-gradient(
           <div class="flashcard-face">
             <span class="flashcard-unit" id="eng-fc-unit"></span>
             <div class="flashcard-word" id="eng-fc-word" style="direction:ltr;text-align:center;"></div>
-            <button class="btn btn-secondary btn-small" onclick="event.stopPropagation();speakWord(this.closest('.flashcard-face').querySelector('.flashcard-word').textContent)" style="margin-top:10px;font-size:1.2em;padding:6px 14px;">🔊</button>
+            <button class="btn btn-secondary btn-small" onclick="event.stopPropagation();speakWord(filteredEngWords[engFcIndex]&&filteredEngWords[engFcIndex].word)" style="margin-top:10px;font-size:1.2em;padding:6px 14px;">🔊</button>
             <div style="font-size:0.9em; opacity:0.5; margin-top:8px;">Click to flip</div>
           </div>
           <div class="flashcard-face flashcard-back">
@@ -733,7 +733,7 @@ body::before { content:''; position:fixed; inset:0; background: radial-gradient(
           <div class="flashcard-face">
             <span class="flashcard-unit" id="eng-uk-unit"></span>
             <div class="flashcard-word" id="eng-uk-word" style="direction:ltr;text-align:center;"></div>
-            <button class="btn btn-secondary btn-small" onclick="event.stopPropagation();speakWord(this.closest('.flashcard-face').querySelector('.flashcard-word').textContent)" style="margin-top:10px;font-size:1.2em;padding:6px 14px;">🔊</button>
+            <button class="btn btn-secondary btn-small" onclick="event.stopPropagation();speakWord(engUnknownWords[engUnknownIndex]&&engUnknownWords[engUnknownIndex].word)" style="margin-top:10px;font-size:1.2em;padding:6px 14px;">🔊</button>
             <div style="font-size:0.9em; opacity:0.5; margin-top:8px;">Click to flip</div>
           </div>
           <div class="flashcard-face flashcard-back">
@@ -7065,18 +7065,14 @@ function srSort(words) {
 function shuffle(arr) {
 function speakWord(word) {
   if (!word || !window.speechSynthesis) return;
-  speechSynthesis.cancel();
-  setTimeout(() => {
+  try {
+    speechSynthesis.cancel();
     let utter = new SpeechSynthesisUtterance(word.trim());
     utter.lang = 'en-US';
-    utter.rate = 0.9;
-    let voices = speechSynthesis.getVoices();
-    let enVoice = voices.find(v => v.lang.startsWith('en-'));
-    if (enVoice) utter.voice = enVoice;
+    utter.rate = 0.85;
     speechSynthesis.speak(utter);
-  }, 100);
+  } catch(e) { console.warn('TTS error:', e); }
 }
-  let a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
     let j = Math.floor(Math.random() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
