@@ -7065,13 +7065,17 @@ function srSort(words) {
 function shuffle(arr) {
 function speakWord(word) {
   if (!word || !window.speechSynthesis) return;
-  let utter = new SpeechSynthesisUtterance(word.trim());
-  utter.lang = 'en-US';
-  utter.rate = 0.9;
   speechSynthesis.cancel();
-  speechSynthesis.speak(utter);
+  setTimeout(() => {
+    let utter = new SpeechSynthesisUtterance(word.trim());
+    utter.lang = 'en-US';
+    utter.rate = 0.9;
+    let voices = speechSynthesis.getVoices();
+    let enVoice = voices.find(v => v.lang.startsWith('en-'));
+    if (enVoice) utter.voice = enVoice;
+    speechSynthesis.speak(utter);
+  }, 100);
 }
-
   let a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
     let j = Math.floor(Math.random() * (i + 1));
