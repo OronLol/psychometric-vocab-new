@@ -7431,7 +7431,11 @@ function showEngFlashcard() {
   w = filteredEngWords[engFcIndex];
   
   // Reset flip state FIRST to prevent translation flash
-  document.getElementById('eng-flashcard').classList.remove('flipped');
+  let engCard = document.getElementById('eng-flashcard');
+  engCard.style.transition = 'none';
+  engCard.classList.remove('flipped');
+  engCard.offsetHeight;
+  engCard.style.transition = '';
   document.getElementById('eng-fc-rating').style.display = 'none';
   engFcFlipped = false;
   // Front side
