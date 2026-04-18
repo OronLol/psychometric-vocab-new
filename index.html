@@ -7430,6 +7430,10 @@ function showEngFlashcard() {
   
   w = filteredEngWords[engFcIndex];
   
+  // Reset flip state FIRST to prevent translation flash
+  document.getElementById('eng-flashcard').classList.remove('flipped');
+  document.getElementById('eng-fc-rating').style.display = 'none';
+  engFcFlipped = false;
   // Front side
   document.getElementById('eng-fc-unit').textContent = 'Unit ' + w.unit;
   document.getElementById('eng-fc-word').textContent = w.word;
@@ -7441,11 +7445,6 @@ function showEngFlashcard() {
   document.getElementById('eng-fc-heb').textContent = w.heb || w.def || '';
   document.getElementById('eng-fc-heb').style.display = (w.heb || w.def) ? 'block' : 'none';
   document.getElementById('eng-fc-example').textContent = w.example || '';
-  
-  // Reset flip state
-  document.getElementById('eng-flashcard').classList.remove('flipped');
-  document.getElementById('eng-fc-rating').style.display = 'none';
-  engFcFlipped = false;
   
   // Update progress
   document.getElementById('eng-fc-progress').textContent = (engFcIndex + 1) + ' / ' + filteredEngWords.length;
